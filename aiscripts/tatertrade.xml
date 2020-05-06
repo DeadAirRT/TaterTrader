@@ -1080,7 +1080,7 @@
                 <set_value name="$buycost" exact="$buyoffer.unitprice/100*$discount2/100" />
                 <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'This buyer has the same owner as us, or the buy price is '+$buycost" output="false" append="true" />  -->
               </do_if>
-              <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="' Scanning buy offer for ('+$buyoffer.ware+') at ('+$buyoffer.buyer.knownname+') Price: '+$buycost+' Faction: '+$buyoffer.buyer.owner+' Restriction: '+$buyoffer.restriction.faction+' Raw OfferPrice: '+$buyoffer.unitprice/100+' Relation: '+$buyoffer.buyer.relationto.{this.ship.owner}+' Gate Distance: '+this.ship.gatedistance.{$buyoffer.buyer}.{$blacklistgroup}.{this.assignedcontrolled}+' Distance Raw: '+this.ship.distanceto.{$buyoffer.buyer}" output="false" append="true" />
+              <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="' Scanning buy offer for ('+@$buyoffer.ware+') at ('+@$buyoffer.buyer.knownname+') Price: '+@$buycost+' Faction: '+@$buyoffer.buyer.owner+' Restriction: '+@$buyoffer.restriction.faction+' Raw OfferPrice: '+@$buyoffer.unitprice/100+' Relation: '+@$buyoffer.buyer.relationto.{this.ship.owner}+' Gate Distance: '+this.ship.gatedistance.{@$buyoffer.buyer}.{@$blacklistgroup}.{this.assignedcontrolled}+' Distance Raw: '+this.ship.distanceto.{@$buyoffer.buyer}" output="false" append="true" />
               
               <!-- If fast trade is enabled, and we already scanned for the best sell offer -->
               <do_if value="not $fasttrade or $bestsell == 0">
@@ -1154,7 +1154,7 @@
                       </do_if>
                     </do_if>
                     
-                    <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'   Scanning sell offer for ('+$buyoffer.ware+') at ('+$selloffer.seller.knownname+') Faction: ('+$selloffer.seller.owner+') Restriction: ('+$selloffer.restriction.faction+') Buying at '+$buycost+' Selling at '+$sellcost+' Average: '+$buyoffer.ware.averageprice/100+' Amount: '+$Amount+' Grofit: '+ $Amount*($buycost-$sellcost)+' Ratio: '+$Ratio+' Rating: '+$Rating+' RawSellOffer Price: '+$selloffer.unitprice/100+' Relation: '+$selloffer.seller.relationto.{this.ship.owner}+' Gate Distance: '+$selloffer.seller.gatedistance.{$buyoffer.buyer}.{$blacklistgroup}.{this.assignedcontrolled}+' Distance Raw: '+$selloffer.seller.distanceto.{$buyoffer.buyer}+' Distance Scale: '+$distancescale" output="false" append="true" />
+                    <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'   Scanning sell offer for ('+@$buyoffer.ware+') at ('+@$selloffer.seller.knownname+') Faction: ('+@$selloffer.seller.owner+') Restriction: ('+@$selloffer.restriction.faction+') Buying at '+@$buycost+' Selling at '+@$sellcost+' Average: '+@$buyoffer.ware.averageprice/100+' Amount: '+@$Amount+' Grofit: '+ @$Amount*(@$buycost-@$sellcost)+' Ratio: '+@$Ratio+' Rating: '+@$Rating+' RawSellOffer Price: '+@$selloffer.unitprice/100+' Relation: '+@$selloffer.seller.relationto.{this.ship.owner}+' Gate Distance: '+@$selloffer.seller.gatedistance.{@$buyoffer.buyer}.{@$blacklistgroup}.{this.assignedcontrolled}+' Distance Raw: '+@$selloffer.seller.distanceto.{@$buyoffer.buyer}+' Distance Scale: '+@$distancescale" output="false" append="true" />
 
                     <do_if value="$bestrating lt $Rating">
                       <set_value name="$bestrating" exact="$Rating"/>
