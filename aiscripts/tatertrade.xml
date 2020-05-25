@@ -116,10 +116,10 @@
       
       <!-- If your looking into tweaking this, be aware that high space speeds may cause performance issues. -->
       <param name="scanspeed" default="5" type="number" text="Scan Speed" comment="How fast do we calculate?">
-        <input_param name="startvalue" value="5"/>
+        <input_param name="startvalue" value="200"/>
         <input_param name="min" value="1"/>
-        <input_param name="max" value="15"/>
-        <input_param name="step" value="1"/>
+        <input_param name="max" value="500"/>
+        <input_param name="step" value="25"/>
       </param>
     </params>
     <skill min="20"/> <!-- Not any hotshot can be a tatertrader, theres standards ye know? -->
@@ -144,7 +144,7 @@
     <!-- <set_value name="$object" exact="this.assignedcontrolled" /> -->
 	<set_value name="$TaterDebugChance" exact="false" />
 	<set_value name="$debugchance" exact="0" />
-    <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Starting Log File Version: 4'" output="false" append="false" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+    <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Starting Log File Version: 4'" output="false" append="false" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
     
     <set_order_syncpoint_reached order="this.ship.order"/>
 
@@ -157,7 +157,7 @@
     <!-- <create_list name="$bannedfactions" /> -->
     <set_value name="$bannedfactions" exact="[]" />
     <do_if value="$enablebans">
-      <!--  <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Adding factions to banned list!'" output="false" append="true" /> -->
+      <!--  <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Adding factions to banned list!'" output="false" append="true" /> -->
       <do_if value="$playerban">
         <append_to_list name="$bannedfactions" exact="faction.player"/>
       </do_if>
@@ -318,18 +318,18 @@
       </do_if>
 
       <do_if value="not $usepresets">
-        <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Use presets disabled! Skipping Preset Section.'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+        <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Use presets disabled! Skipping Preset Section.'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
         <resume label="start" />
       </do_if>
  
       <label name="detectpresets" />
-      <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Detecting Presets!'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+      <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Detecting Presets!'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 
       <label name="warelistloop" /> 
 	  <!-- Let's try to clean this up DA-->
 	  <!-- Goal one, stop this loop DA-->
 	  <!-- We will define the lists for the parameters here, then actually add them to ware basket in next label DA-->
-      <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Looping Preset Lists! Loop: '+$gotowarelist" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+      <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Looping Preset Lists! Loop: '+$gotowarelist" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 	  <!-- We will set the ware lists here, then process in the next label DA-->
 	
 	<do_if value="$usepresets">
@@ -481,11 +481,16 @@
 	  <!-- More blacklist stuff from DA -->
 	  <!-- Remove cluster from buyspaces if it is not $range ($home but always a sector) and is part of blacklist. We lose potential sectors in a contested cluster but I would have to rewrite a lot to fix and I'm not feeling up to it -->
 	  <do_all exact="$buyspaces.count" counter="$blacklistcounter1" reverse="true">
-		<wait exact="1ms"/>
+
+                  <set_value name="$scantick" exact="$scantick+10" />
+                  <do_if value="$scantick gt $scantickrate">
+                    <set_value name="$scantick" exact="0" />
+                    <wait exact="1ms" />
+                  </do_if>
 		<find_sector name="$blacklistsectorlisttocheck" space="$buyspaces.{$blacklistcounter1}" multiple="true" />
 		<do_all exact="$blacklistsectorlisttocheck.count" counter="$blacklistsectorcounter1" reverse="true">
 			<do_if value="($blacklistsectorlisttocheck.{$blacklistsectorcounter1} != $range) and (($blacklistsectorlisttocheck.{$blacklistsectorcounter1}.isblacklisted.{blacklisttype.sectoractivity}.{$blacklistgroup}.{this.assignedcontrolled}) or ($blacklistsectorlisttocheck.{$blacklistsectorcounter1}.isblacklisted.{blacklisttype.sectortravel}.{$blacklistgroup}.{this.assignedcontrolled}))">
-				<debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Removing ' + $buyspaces.{$blacklistcounter1}.knownname + ' from buyspaces - DA'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+				<debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Removing ' + $buyspaces.{$blacklistcounter1}.knownname + ' from buyspaces - DA'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 				<remove_value name="$buyspaces.{$blacklistcounter1}" />
 				<break/>
 			</do_if>
@@ -493,11 +498,15 @@
 	  </do_all>
 	  <!-- Remove cluster from sellspaces, same as above -->
 	  <do_all exact="$sellspaces.count" counter="$blacklistcounter2" reverse="true">
-		<wait exact="1ms"/>
+                  <set_value name="$scantick" exact="$scantick+10" />
+                  <do_if value="$scantick gt $scantickrate">
+                    <set_value name="$scantick" exact="0" />
+                    <wait exact="1ms" />
+                  </do_if>
 		<find_sector name="$blacklistsectorlisttocheck" space="$sellspaces.{$blacklistcounter2}" multiple="true" />
 		<do_all exact="$blacklistsectorlisttocheck.count" counter="$blacklistsectorcounter2" reverse="true">
 			<do_if value="($blacklistsectorlisttocheck.{$blacklistsectorcounter2} != $range) and (($blacklistsectorlisttocheck.{$blacklistsectorcounter2}.isblacklisted.{blacklisttype.sectoractivity}.{$blacklistgroup}.{this.assignedcontrolled}) or ($blacklistsectorlisttocheck.{$blacklistsectorcounter2}.isblacklisted.{blacklisttype.sectortravel}.{$blacklistgroup}.{this.assignedcontrolled}))">
-				<debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Removing ' + $sellspaces.{$blacklistcounter2}.knownname + ' from sellspaces - DA'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+				<debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Removing ' + $sellspaces.{$blacklistcounter2}.knownname + ' from sellspaces - DA'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 				<remove_value name="$sellspaces.{$blacklistcounter2}" />
 				<break/>
 			</do_if>
@@ -507,17 +516,17 @@
       <!-- Exclude selected sectors. -->
       <do_if value="not ($excludedsectors == null)">
         <do_if value="$excludedsectors.count gt 0">
-          <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Sector Restrictions detected!'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+          <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Sector Restrictions detected!'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
           <create_list name="$buyspacesfiltered" />
           <create_list name="$sellspacesfiltered" />
 
           <do_all exact="$buyspaces.count" counter="$sector">
             <set_value name="$excluded" exact="false" />
             <do_all exact="$excludedsectors.count" counter="$check">
-              <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Excluded Sector: ('+$excludedsectors.{$check}.knownname+'),('+$excludedsectors.{$check}.cluster.knownname+') Table: '+$excludedsectors.{$check}.cluster+' BuySpace Cluster: ('+$buyspaces.{$sector}.knownname+') Table: '+$buyspaces.{$sector}" output="false" append="true" />-->
+              <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Excluded Sector: ('+$excludedsectors.{$check}.knownname+'),('+$excludedsectors.{$check}.cluster.knownname+') Table: '+$excludedsectors.{$check}.cluster+' BuySpace Cluster: ('+$buyspaces.{$sector}.knownname+') Table: '+$buyspaces.{$sector}" output="false" append="true" />-->
               <do_if value="$excludedsectors.{$check}.cluster == $buyspaces.{$sector}">
                 <set_value name="$excluded" exact="true" />
-                <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Removing '+$buyspaces.{$sector}.knownname+' from BuySpaces'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+                <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Removing '+$buyspaces.{$sector}.knownname+' from BuySpaces'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
               </do_if>
             </do_all>
             <do_if value="not $excluded">
@@ -530,7 +539,7 @@
             <do_all exact="$excludedsectors.count" counter="$check">
               <do_if value="$excludedsectors.{$check}.cluster == $sellspaces.{$sector}">
                 <set_value name="$excluded" exact="true" />
-                <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Removing '+$sellspaces.{$sector}.knownname+' from SellSpaces'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+                <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Removing '+$sellspaces.{$sector}.knownname+' from SellSpaces'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
               </do_if>
             </do_all>
             <do_if value="not $excluded">
@@ -549,7 +558,7 @@
       <!-- Include selected sectors. -->
       <do_if value="not ($includedsectors == null)">
         <do_if value="$includedsectors.count gt 0">
-          <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Adding WhiteListed Sectors to the sector list!'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+          <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Adding WhiteListed Sectors to the sector list!'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
           <do_all exact="$includedsectors.count" counter="$sector">
             <set_value name="$buyspaced" exact="false" />
             <do_all exact="$buyspaces.count" counter="$buy">
@@ -574,13 +583,13 @@
         </do_if>
       </do_if>
 
-      <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Sectors in Range Buy: '+$buyspaces.count+' Sell: '+$sellspaces.count" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+      <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Sectors in Range Buy: '+$buyspaces.count+' Sell: '+$sellspaces.count" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
       <!-- What wares do we currently have, lets try to sell them to the highest bidder. -->
 	  <set_value name="$Cargo" exact="this.ship.cargo.list" />
-      <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Scanning CargoBay: '+$Cargo.count" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+      <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Scanning CargoBay: '+$Cargo.count" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 	  <do_if value="$Cargo.count gt 0">
         <do_all exact="$Cargo.count" counter="$ware">
-          <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'CargoBay Contains: '+$Cargo.{$ware}+' Amount: '+this.ship.cargo.{$Cargo.{$ware}}.count" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+          <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'CargoBay Contains: '+$Cargo.{$ware}+' Amount: '+this.ship.cargo.{$Cargo.{$ware}}.count" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
         </do_all>
         <set_value name="$buyoffers" exact="[]" />
         <do_all exact="$sellspaces.count" counter="$sector">
@@ -606,11 +615,13 @@
         </do_all>
 
         <do_if value="$buyoffers.count gt 0">
-          <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Buy Offers found: '+$buyoffers.count" output="false" append="true" /> -->
+          <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Buy Offers found: '+$buyoffers.count" output="false" append="true" /> -->
           <set_value name="$Grofit" exact="0" />
           <set_value name="$GrofitFound" exact="false" />
+          <sort_trades name="$buyoffers" tradelist="$buyoffers" sorter="relativeprice"/>
+          <set_value name="$buyoffersChecked" exact="0" />
           <do_all exact="$buyoffers.count" counter="$buy">
-            <set_value name="$buyoffer" exact="$buyoffers.{$buy}" />
+            <set_value name="$buyoffer" exact="$buyoffers.{$buyoffers.count-$buy+1}" />
             <set_value name="$checkdeal" exact="true" />
 
             <!-- Big ugly piece of code to check for faction bans. -->
@@ -649,12 +660,16 @@
 
               <set_value name="$totalearned" exact="$distancescale*($Amount)f*($buycost)f"/>
 
-              <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Buy Offer for: '+$buyoffer.ware+' at '+$buyoffer.buyer.knownname+' Amount: '+$Amount+' DesiredAmount: '+$buyoffer.desiredamount+' OfferAmount: '+$buyoffer.offeramount+' Stock: '+$buyoffer.stocklevel+' Profit: '+ $Amount*$buycost+' Payout: '+$buycost+' Distance: '+$distance+' DistanceScale: '+$distancescale+' Scaled: '+$totalearned+' HighestGrofit: '+$Grofit+' Available: '+$buyoffer.available+' Restricted: '+$buyoffer.restriction.faction+' MinAmount: '+$buyoffer.minamount+' IsMission: '+$buyoffer.ismission+' IsExchange: '+$buyoffer.iswareexchange+' FreeSpace: '+$buyoffer.buyer.cargo.{$buyoffer.ware}.free+' CommandersMoney: '+$buyoffer.buyer.money+' Exists: '+$buyoffer.exists+' Ware Illegal: '+$buyoffer.ware.illegalto.{$buyoffer.buyer.owner}.{null}" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+              <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Buy Offer for: '+$buyoffer.ware+' at '+$buyoffer.buyer.knownname+' Amount: '+$Amount+' DesiredAmount: '+$buyoffer.desiredamount+' OfferAmount: '+$buyoffer.offeramount+' Stock: '+$buyoffer.stocklevel+' Profit: '+ $Amount*$buycost+' Payout: '+$buycost+' Distance: '+$distance+' DistanceScale: '+$distancescale+' Scaled: '+$totalearned+' HighestGrofit: '+$Grofit+' Available: '+$buyoffer.available+' Restricted: '+$buyoffer.restriction.faction+' MinAmount: '+$buyoffer.minamount+' IsMission: '+$buyoffer.ismission+' IsExchange: '+$buyoffer.iswareexchange+' FreeSpace: '+$buyoffer.buyer.cargo.{$buyoffer.ware}.free+' CommandersMoney: '+$buyoffer.buyer.money+' Exists: '+$buyoffer.exists+' Ware Illegal: '+$buyoffer.ware.illegalto.{$buyoffer.buyer.owner}.{null}" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
               <do_if value="$totalearned gt $Grofit"> <!-- is it a better deal then the last check? -->
                 <set_value name="$Grofit" exact="$totalearned" />
                 <set_value name="$GrofferBuy" exact="$buyoffer" />
                 <set_value name="$Gromount" exact="$Amount" />
                 <set_value name="$GrofitFound" exact="true" />
+              </do_if>
+              <set_value name="$buyoffersChecked" exact="$buyoffersChecked + 1" />
+              <do_if value="$buyoffersChecked gt ($maxbuy+$maxsell+10)">
+                <break />
               </do_if>
             </do_if>
 
@@ -667,8 +682,8 @@
 
           <do_if value="$GrofitFound">
             <do_if value="$GrofferBuy">
-              <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Selling '+$Gromount+' '+$GrofferBuy.ware+' for '+$GrofferBuy.unitprice/100+' at '+$GrofferBuy.buyer.knownname+' DealAvailiability: '+$GrofferBuy.available" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
-              <write_to_logbook category="upkeep" title="'TaterTrader: '+this.ship.knownname" interaction="showonmap" object="this.ship" money="$Gromount*$GrofferBuy.unitprice" text="{3282837,201}.[$Gromount,$GrofferBuy.ware,$GrofferBuy.unitprice/100,$Gromount*$GrofferBuy.unitprice/100]" />
+              <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Selling '+$Gromount+' '+$GrofferBuy.ware+' for '+$GrofferBuy.unitprice/100+' at '+$GrofferBuy.buyer.knownname+' DealAvailiability: '+$GrofferBuy.available" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+              <write_to_logbook category="upkeep" title="'TaterTrader: '+this.ship.knownname+' ( '+this.ship.idcode+' )'" interaction="showonmap" object="this.ship" money="$Gromount*$GrofferBuy.unitprice" text="{3282837,201}.[$Gromount,$GrofferBuy.ware,$GrofferBuy.unitprice/100,$Gromount*$GrofferBuy.unitprice/100]" />
               <create_trade_order name="$GrofferBuy" object="this.object" tradeoffer="$GrofferBuy" amount="$Gromount" immediate="false" />
               <resume label="afterdealsetup" />  <!-- Why does this trade offer have to be be so hard to setup -->
             </do_if>
@@ -698,7 +713,7 @@
           </do_all>
         </do_if>
 
-        <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Station has: '+$stationselloffers.count+' sell offers and '+$stationbuyoffers.count+' buy offers.'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
+        <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Station has: '+$stationselloffers.count+' sell offers and '+$stationbuyoffers.count+' buy offers.'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
 
         <set_value name="$prioritytype" exact="0" />
         <set_value name="$StationTrade" exact="false" />
@@ -713,11 +728,13 @@
           <do_all exact="$stationselloffers.count" counter="$offer">
             <set_value name="$stationselloffer" exact="$stationselloffers.{$offer}" />
             <set_value name="$offerpriority" exact="$stationselloffer.stocklevel*100" />
-            <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Sell Offer: '+$stationselloffer.ware+' Price: '+$stationselloffer.unitprice/100+' SellFree: '+$stationselloffer.sellfree.{this.ship}+' Stock: '+$stationselloffer.stocklevel*100+'% Priority: '+$offerpriority" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+            <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Sell Offer: '+$stationselloffer.ware+' Price: '+$stationselloffer.unitprice/100+' SellFree: '+$stationselloffer.sellfree.{this.ship}+' Stock: '+$stationselloffer.stocklevel*100+'% Priority: '+$offerpriority" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+
+            <set_value name="$minAmount" exact="this.ship.cargo.{$stationselloffer.ware}.free * 0.8" />
 
             <!-- Maybe Scale priority based on what exactly the ware is -->
             <!-- TODO: Add a setting to allow players to customise the stock level requirements for trading. -->
-            <do_if value="$offerpriority gt $stockratio">                
+            <do_if value="$offerpriority gt $stockratio and ($stationselloffer.amount ge $minAmount)">
               <!-- Scan for routes we can run, then save them -->
               <set_value name="$foundbuyers" exact="[]" />
               <do_all exact="$sellspaces.count" counter="$sector">
@@ -739,22 +756,24 @@
                 </do_all>
               </do_all>
 
-              <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="' Scanning for buy offers! Found: '+$foundbuyers.count" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+              <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="' Scanning for buy offers! Found: '+$foundbuyers.count" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 
               <set_value name="$bestdeal" exact="0" />
               <set_value name="$bestprice" exact="0" />
               <set_value name="$bestamount" exact="0" />
+              <set_value name="$buyoffersChecked" exact="0" />
+              <sort_trades name="$foundbuyers" tradelist="$foundbuyers" sorter="relativeprice"/>
 
               <do_all exact="$foundbuyers.count" counter="$buy">
-                <set_value name="$foundbuyoffer" exact="$foundbuyers.{$buy}" />
+                <set_value name="$foundbuyoffer" exact="$foundbuyers.{$foundbuyers.count-$buy+1}" />
                 <set_value name="$wareprice" exact="$foundbuyoffer.unitprice/100" />
                 <do_if value="$foundbuyoffer.buyer.owner == this.ship.owner">
                   <set_value name="$wareprice" exact="$foundbuyoffer.unitprice/100*$discount2/100" />
                 </do_if>
 
-                <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'   Scanning buy offer for ('+$foundbuyoffer.ware+') at ('+$foundbuyoffer.buyer.knownname+') Price: '+$wareprice+' Amount: '+$foundbuyoffer.amount+' Faction: '+$foundbuyoffer.buyer.owner+' Restriction: '+$foundbuyoffer.restriction.faction+' Raw OfferPrice: '+$foundbuyoffer.unitprice/100+' Relation: '+$foundbuyoffer.buyer.relationto.{this.ship.owner}+' Gate Distance: '+$home.gatedistance.{$foundbuyoffer.buyer}.{$blacklistgroup}.{this.assignedcontrolled}+' Distance Raw: '+$home.distanceto.{$foundbuyoffer.buyer}" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+                <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'   Scanning buy offer for ('+$foundbuyoffer.ware+') at ('+$foundbuyoffer.buyer.knownname+') Price: '+$wareprice+' Amount: '+$foundbuyoffer.amount+' Faction: '+$foundbuyoffer.buyer.owner+' Restriction: '+$foundbuyoffer.restriction.faction+' Raw OfferPrice: '+$foundbuyoffer.unitprice/100+' Relation: '+$foundbuyoffer.buyer.relationto.{this.ship.owner}+' Gate Distance: '+$home.gatedistance.{$foundbuyoffer.buyer}.{$blacklistgroup}.{this.assignedcontrolled}+' Distance Raw: '+$home.distanceto.{$foundbuyoffer.buyer}" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 
-                <do_if value="$wareprice gt $stationselloffer.unitprice/100"> <!-- Only consider the trade if they are paying more then the station is selling, we arnt a charity here. -->
+                <do_if value="$wareprice gt $stationselloffer.unitprice/100 and ($foundbuyoffer.amount ge $minAmount)"> <!-- Only consider the trade if they are paying more then the station is selling, we arnt a charity here. -->
                   <do_if value="$wareprice gt $bestprice"> <!-- Is it better then the previus best deal? -->
                     <set_value name="$checkdeal" exact="true" />
 
@@ -782,14 +801,14 @@
                       <do_if value="not $blackmarket"> <!-- Dont trade illegal wares automatically, player has to toggle that. -->
                         <set_value name="$checkdeal" exact="false" />
                       </do_if>
-                      <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Ware: '+$stationbuyoffer.ware+' is illegal to '+$stationbuyoffer.buyer.owner+' Adjusting Priority to '+$offerpriority" output="false" append="true" /> -->
+                      <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Ware: '+$stationbuyoffer.ware+' is illegal to '+$stationbuyoffer.buyer.owner+' Adjusting Priority to '+$offerpriority" output="false" append="true" /> -->
                     </do_if>
 
                     <do_if value="$checkdeal">
                       <set_value name="$spendablemoney" exact="player.money/100" />
                       <do_if value="this.ship.commander">
-                        <do_if value="(this.ship.commander.hasownaccount) and (this.ship.commander.defaultorder.id != 'TaterTrade')"> <!-- For proper compatability with commanders that arnt stations. -->
-                          <!--<debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'I have a commander! Has Account: '+this.ship.commander.hasownaccount" output="false" append="true" /> -->
+                        <do_if value="(this.ship.commander.hasownaccount) and (this.ship.commander.defaultorder == null or this.ship.commander.defaultorder.id != 'TaterTrade') and (this.ship.commander.money gt 0)"> <!-- For proper compatability with commanders that arnt stations. -->
+                          <!--<debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'I have a commander! Has Account: '+this.ship.commander.hasownaccount" output="false" append="true" /> -->
                           <set_value name="$spendablemoney" exact="this.ship.commander.money/100" />
                         </do_if>
                       </do_if>
@@ -804,6 +823,11 @@
                       <set_value name="$bestamount" exact="$Amount"/>
                       <set_value name="$bestdeal" exact="$foundbuyers.{$buy}" />
                       <set_value name="$bestprice" exact="$wareprice" />
+
+                      <set_value name="$buyoffersChecked" exact="$buyoffersChecked + 1" />
+                      <do_if value="$buyoffersChecked gt ($maxbuy+$maxsell+10)">
+                        <break />
+                      </do_if>
                     </do_if>
                   </do_if>
                 </do_if>
@@ -839,7 +863,7 @@
                 </do_if>
 
                 <!-- Assign a priority based on the profit gained from the trade. -->
-                <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Selling: ('+$stationselloffer.ware+') Best Deal: ('+$bestdeal.buyer.knownname+') Price: '+$bestdeal.unitprice/100+' Profit: '+$profit+' Amount: ( '+$bestamount+' / '+$WareCapacity+' Max) Priority: '+$offerpriority+' GateDistance: '+$home.gatedistance.{$bestdeal.buyer}.{$blacklistgroup}.{this.assignedcontrolled}+' StockLevel: '+$stationselloffer.stocklevel*100+'% CargoFill: '+(($bestamount)f/($WareCapacity)f)*100+'%'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
+                <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Selling: ('+$stationselloffer.ware+') Best Deal: ('+$bestdeal.buyer.knownname+') Price: '+$bestdeal.unitprice/100+' Profit: '+$profit+' Amount: ( '+$bestamount+' / '+$WareCapacity+' Max) Priority: '+$offerpriority+' GateDistance: '+$home.gatedistance.{$bestdeal.buyer}.{$blacklistgroup}.{this.assignedcontrolled}+' StockLevel: '+$stationselloffer.stocklevel*100+'% CargoFill: '+(($bestamount)f/($WareCapacity)f)*100+'%'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
               </do_if>
             </do_if>
           </do_all>
@@ -853,12 +877,12 @@
             <set_value name="$isbuildstorage" exact="$stationbuyoffer.buyer == $home.buildstorage" />
             <set_value name="$offerpriority" exact="$stationbuyoffer.stocklevel" /> <!-- I was inverting this, but the game already adjusts to whats needed. Not what is currently held. -->
             <set_value name="$offerpriority" exact="$offerpriority*100" />
-
+            <set_value name="$minAmount" exact="[this.ship.cargo.{$stationbuyoffer.ware}.free * 0.8, stationbuyoffer.amount].min" />
             <do_if value="$stationbuyoffer.ware.illegalto.{$stationbuyoffer.buyer.owner}.{this.ship.owner}"> 
               <do_if value="not $blackmarket"> <!-- Dont trade illegal wares automatically, player has to toggle that. -->
                 <set_value name="$offerpriority" exact="0" />
               </do_if>
-              <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Ware: '+$stationbuyoffer.ware+' is illegal to '+$stationbuyoffer.buyer.owner+' Adjusting Priority to '+$offerpriority" output="false" append="true" /> -->
+              <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Ware: '+$stationbuyoffer.ware+' is illegal to '+$stationbuyoffer.buyer.owner+' Adjusting Priority to '+$offerpriority" output="false" append="true" /> -->
             </do_if>
 
             <do_if value="$stationbuyoffer.owner == this.ship.owner">
@@ -867,7 +891,7 @@
               </do_if>
             </do_if>
 
-            <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'BuyerName: ('+$stationbuyoffer.buyer.knownname+') Is Build Storage: '+$isbuildstorage+' Ware: '+$stationbuyoffer.ware+' Price: '+$stationbuyoffer.unitprice/100+' BuyFree: '+$stationbuyoffer.buyfree.{this.ship}+' Stock: '+$stationbuyoffer.stocklevel*100+'% Desired Amount: '+$stationbuyoffer.desiredamount+' Priority: '+$offerpriority" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+            <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'BuyerName: ('+$stationbuyoffer.buyer.knownname+') Is Build Storage: '+$isbuildstorage+' Ware: '+$stationbuyoffer.ware+' Price: '+$stationbuyoffer.unitprice/100+' BuyFree: '+$stationbuyoffer.buyfree.{this.ship}+' Stock: '+$stationbuyoffer.stocklevel*100+'% Desired Amount: '+$stationbuyoffer.desiredamount+' Priority: '+$offerpriority" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
             <do_if value="$offerpriority gt $stockratio">
               <set_value name="$foundseller" exact="[]" />
               <do_all exact="$buyspaces.count" counter="$sector">
@@ -893,7 +917,10 @@
               <set_value name="$bestdeal" exact="0" />
               <set_value name="$bestprice" exact="$stationbuyoffer.unitprice" />
               <set_value name="$bestamount" exact="0" />
-              <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'I found '+$foundseller.count+' sell offers for '+$stationbuyoffer.ware" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+              <set_value name="$buyoffersChecked" exact="0" />
+              <sort_trades name="$foundseller" tradelist="$foundseller" sorter="relativeprice"/>
+
+              <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'I found '+$foundseller.count+' sell offers for '+$stationbuyoffer.ware" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
               
               <do_all exact="$foundseller.count" counter="$sell">
                 <set_value name="$foundselloffer" exact="$foundseller.{$sell}" />
@@ -917,7 +944,7 @@
                   <set_value name="$checkdeal" exact="false"/>
                 </do_if>
 
-                <do_if value="$checkdeal">
+                <do_if value="$checkdeal and ($foundselloffer.amount ge $minAmount)">
                   <set_value name="$wareprice" exact="$foundselloffer.unitprice/100" />
                   <do_if value="$foundselloffer.seller.owner == this.ship.owner">
                     <set_value name="$wareprice" exact="$foundselloffer.unitprice/100*$discount/100" />
@@ -925,8 +952,8 @@
 
                   <set_value name="$spendablemoney" exact="player.money/100" />
                   <do_if value="this.ship.commander">
-                    <do_if value="(this.ship.commander.hasownaccount) and (this.ship.commander.defaultorder.id != 'TaterTrade')"> <!-- For proper compatability with commanders that arnt stations. -->
-                      <!--<debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'I have a commander! Has Account: '+this.ship.commander.hasownaccount" output="false" append="true" /> -->
+                        <do_if value="(this.ship.commander.hasownaccount) and (this.ship.commander.defaultorder == null or this.ship.commander.defaultorder.id != 'TaterTrade') and (this.ship.commander.money gt 0)"> <!-- For proper compatability with commanders that arnt stations. -->
+                      <!--<debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'I have a commander! Has Account: '+this.ship.commander.hasownaccount" output="false" append="true" /> -->
                       <set_value name="$spendablemoney" exact="this.ship.commander.money/100" />
                     </do_if>
                   </do_if>
@@ -937,9 +964,9 @@
                   <do_else>
                     <set_value name="$Amount" exact="[this.ship.cargo.{$stationbuyoffer.ware}.free,$stationbuyoffer.amount,$foundselloffer.amount].min"/>
                   </do_else>
-                  <!--<debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'SpaceLeft: '+this.ship.cargo.{$stationbuyoffer.ware}.free+' BuyAmount: '+$stationbuyoffer.amount+' SellAmount: '+$foundselloffer.amount+' AmountAfforded: '+$spendablemoney/(2*$wareprice)" output="false" append="true" /> -->
+                  <!--<debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'SpaceLeft: '+this.ship.cargo.{$stationbuyoffer.ware}.free+' BuyAmount: '+$stationbuyoffer.amount+' SellAmount: '+$foundselloffer.amount+' AmountAfforded: '+$spendablemoney/(2*$wareprice)" output="false" append="true" /> -->
 
-                  <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'   Scanning sell offer for ( '+$Amount+' '+$stationbuyoffer.ware+' ) at ('+$foundselloffer.seller.knownname+') Price: '+$wareprice+' Faction: '+$foundselloffer.seller.owner+' Restriction: '+$foundselloffer.restriction.faction+' Raw OfferPrice: '+$foundselloffer.unitprice/100+' BuyAmount: '+$stationbuyoffer.amount+' SellAmount: '+$foundselloffer.amount" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+                  <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'   Scanning sell offer for ( '+$Amount+' '+$stationbuyoffer.ware+' ) at ('+$foundselloffer.seller.knownname+') Price: '+$wareprice+' Faction: '+$foundselloffer.seller.owner+' Restriction: '+$foundselloffer.restriction.faction+' Raw OfferPrice: '+$foundselloffer.unitprice/100+' BuyAmount: '+$stationbuyoffer.amount+' SellAmount: '+$foundselloffer.amount" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 
                   <do_if value="$wareprice lt $stationbuyoffer.unitprice/100"> <!-- Is the station selling it cheaper then we are asking? -->
                     <do_if value="($wareprice lt $bestprice) or ($Amount gt $bestamount)"> <!-- Is it better then the previus best deal? -->
@@ -947,6 +974,10 @@
                       <set_value name="$bestprice" exact="$wareprice" />
                       <set_value name="$bestamount" exact="$Amount" />
                     </do_if>
+                      <set_value name="$buyoffersChecked" exact="$buyoffersChecked + 1" />
+                      <do_if value="$buyoffersChecked gt ($maxbuy+$maxsell+10)">
+                        <break />
+                      </do_if>
                   </do_if>
                 </do_if>
 
@@ -982,14 +1013,14 @@
                   </do_if>
                 </do_if>
 
-                <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Buying: ('+$stationbuyoffer.ware+') Best Deal: ('+$bestdeal.seller.knownname+') Price: '+$bestprice+' Amount: ( '+$bestamount+' / '+$WareCapacity+' Max) Priority: '+$offerpriority+' GateDistance: '+$home.gatedistance.{$bestdeal.seller}.{$blacklistgroup}.{this.assignedcontrolled}+' StockLevel: '+$stationbuyoffer.stocklevel*100+'% CargoFill: '+(($bestamount)f/($WareCapacity)f)*100+'%'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
+                <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Buying: ('+$stationbuyoffer.ware+') Best Deal: ('+$bestdeal.seller.knownname+') Price: '+$bestprice+' Amount: ( '+$bestamount+' / '+$WareCapacity+' Max) Priority: '+$offerpriority+' GateDistance: '+$home.gatedistance.{$bestdeal.seller}.{$blacklistgroup}.{this.assignedcontrolled}+' StockLevel: '+$stationbuyoffer.stocklevel*100+'% CargoFill: '+(($bestamount)f/($WareCapacity)f)*100+'%'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
               </do_if>
             </do_if>
           </do_all>
         </do_if>
 
         <do_if value="$StationTrade == true">
-          <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Station Trader Trade found!'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+          <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Station Trader Trade found!'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
           <set_value name="$GrofitFound" exact="false" />
           <resume label="setupdeals" />
         </do_if>
@@ -1009,24 +1040,24 @@
       -->
 
       <do_if value="not ($warebasket.count gt 0)">
-        <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'\nNo Wares Detected! Resetting to start! Log File Version: 4'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+        <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'\nNo Wares Detected! Resetting to start! Log File Version: 4'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
         <wait exact="100ms" />
         <resume label="start" />
       </do_if>
 
       <!-- Free Trader mode -->
       <!-- Find trade deals we can run. -->
-      <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Searching for trade deals'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
+      <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Searching for trade deals'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
 
       <set_value name="$Grofit" exact="100" />
       <set_value name="$GrofitFound" exact="false" />
       <do_all exact="$warebasket.count" counter="$ware">
         <!-- First grab the offers for the ware from all the sectors in range.. -->
-        <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Checking offers for ware: '+$warebasket.{$ware}" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
+        <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Checking offers for ware: '+$warebasket.{$ware}" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
         
         <create_list name="$buyoffers" />
         <do_all exact="$sellspaces.count" counter="$sector">
-          <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Scanning Sector for buy offers: '+$sellspaces.{$sector}" output="false" append="true" /> -->
+          <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Scanning Sector for buy offers: '+$sellspaces.{$sector}" output="false" append="true" /> -->
           <find_buy_offer tradepartner="this.ship" space="$sellspaces.{$sector}" result="$buyers" multiple="true" wares="$warebasket.{$ware}">
           <match_buyer>
             <match_relation_to object="this.ship" relation="enemy" comparison="not"/>
@@ -1048,7 +1079,7 @@
         
         <create_list name="$selloffers" />
         <do_all exact="$buyspaces.count" counter="$sector">
-          <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Scanning Sector for sell offers: '+$buyspaces.{$sector}" output="false" append="true" /> -->
+          <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Scanning Sector for sell offers: '+$buyspaces.{$sector}" output="false" append="true" /> -->
           <find_sell_offer tradepartner="this.ship" space="$buyspaces.{$sector}" result="$sellers" multiple="true" wares="$warebasket.{$ware}">
           <match_seller>
               <match_relation_to object="this.ship" relation="enemy" comparison="not"/>
@@ -1072,36 +1103,40 @@
         <set_value name="$bestsell" exact="0" />
 
         <!-- Are there any possible deals withen our search area? -->
-        <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'I found these offers nearby, Buy: '+$buyoffers.count+' Sell: '+$selloffers.count" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
+        <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'I found these offers nearby, Buy: '+$buyoffers.count+' Sell: '+$selloffers.count" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/> 
         <do_if value="$buyoffers.count and $selloffers.count">
           <!-- Now we compare the offers and try to get a decent deal -->
           <shuffle_list list="$buyoffers"/>
           <sort_trades name="$buyoffers" tradelist="$buyoffers" sorter="relativeprice"/>
+          <set_value name="$buyoffersChecked" exact="0" />
+          <shuffle_list list="$selloffers"/>
+          <sort_trades name="$selloffers" tradelist="$selloffers" sorter="relativeprice"/>
           <do_all exact="$buyoffers.count" counter="$buy">
-            <set_value name="$buyoffer" exact="$buyoffers.{$buy}" />
+            <set_value name="$buyoffer" exact="$buyoffers.{$buyoffers.count-$buy+1}" />
             <set_value name="$tradebanned" exact="false" />
 
-            <!--<debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Banned Faction Count: '+$bannedfactions.count" output="false" append="true" /> -->
+            <!--<debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Banned Faction Count: '+$bannedfactions.count" output="false" append="true" /> -->
             <do_if value="$bannedfactions.count gt 0 and $buyoffer.available">
               <do_all exact="$bannedfactions.count" counter="$fab">
-                <!--<debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Comparing against faction: '+$bannedfactions.{$fact}" output="false" append="true" /> -->
+                <!--<debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Comparing against faction: '+$bannedfactions.{$fact}" output="false" append="true" /> -->
                 <do_if value="$buyoffer.buyer.owner == $bannedfactions.{$fab}">
                   <set_value name="$tradebanned" exact="true" />
                 </do_if>
               </do_all>        
-            <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Faction: '+$buyoffer.buyer.owner+' Trade Banned: '+$tradebanned" output="false" append="true" /> -->
+            <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Faction: '+$buyoffer.buyer.owner+' Trade Banned: '+$tradebanned" output="false" append="true" /> -->
             </do_if> 
-
-            <do_if value="$buyoffer.available and not $tradebanned">
+            <set_value name="$minAmount" exact="this.ship.cargo.{$buyoffer.ware}.free * 0.8" />
+            <do_if value="$buyoffer.available and not $tradebanned and ($buyoffer.amount ge $minAmount)">
               <set_value name="$buycost" exact="$buyoffer.unitprice/100" />
               <do_if value="($buycost == 0) or ($buyoffer.buyer.owner == this.ship.owner)">
                 <set_value name="$buycost" exact="$buyoffer.unitprice/100*$discount2/100" />
-                <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'This buyer has the same owner as us, or the buy price is '+$buycost" output="false" append="true" />  -->
+                <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'This buyer has the same owner as us, or the buy price is '+$buycost" output="false" append="true" />  -->
               </do_if>
-              <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="' Scanning buy offer for ('+$buyoffer.ware+') at ('+$buyoffer.buyer.knownname+') Price: '+$buycost+' Faction: '+$buyoffer.buyer.owner+' Restriction: '+$buyoffer.restriction.faction+' Raw OfferPrice: '+$buyoffer.unitprice/100+' Relation: '+$buyoffer.buyer.relationto.{this.ship.owner}+' Gate Distance: '+this.ship.gatedistance.{$buyoffer.buyer}.{$blacklistgroup}.{this.assignedcontrolled}+' Distance Raw: '+this.ship.distanceto.{$buyoffer.buyer}" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+              <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="' Scanning buy offer for ('+$buyoffer.ware+') at ('+$buyoffer.buyer.knownname+')  MinAmount: '+$minAmount+'  Price: '+$buycost+' Faction: '+$buyoffer.buyer.owner+' Restriction: '+$buyoffer.restriction.faction+' Raw OfferPrice: '+$buyoffer.unitprice/100+' Relation: '+$buyoffer.buyer.relationto.{this.ship.owner}+' Gate Distance: '+this.ship.gatedistance.{$buyoffer.buyer}.{$blacklistgroup}.{this.assignedcontrolled}+' Distance Raw: '+this.ship.distanceto.{$buyoffer.buyer}" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
               
               <!-- If fast trade is enabled, and we already scanned for the best sell offer -->
               <do_if value="not $fasttrade or $bestsell == 0">
+                <set_value name="$selloffersChecked" exact="0" />
                 <do_all exact="$selloffers.count" counter="$sell">
                   <set_value name="$selloffer" exact="$selloffers.{$sell}" />
                   <set_value name="$tradebanned" exact="false" />
@@ -1113,21 +1148,21 @@
                         <set_value name="$tradebanned" exact="true" />
                       </do_if>
                     </do_all>                  
-                  <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Faction: '+$selloffer.seller.owner+' Trade Banned: '+$tradebanned" output="false" append="true" /> -->
+                  <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Faction: '+$selloffer.seller.owner+' Trade Banned: '+$tradebanned" output="false" append="true" /> -->
                   </do_if> 
 
-                  <do_if value="$selloffer.available and not $tradebanned">
+                  <do_if value="$selloffer.available and not $tradebanned and ($selloffer.amount ge $minAmount)">
                     <set_value name="$sellcost" exact="$selloffer.unitprice/100" />
 
                     <do_if value="$selloffer.seller.owner == this.ship.owner">
                       <set_value name="$sellcost" exact="$selloffer.unitprice/100*$discount/100" />
-                      <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Raw Avg: '+$selloffer.ware.averageprice/100+' Discount: '+$discount/100+' equals '+$sellcost" output="false" append="true" /> -->
+                      <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Raw Avg: '+$selloffer.ware.averageprice/100+' Discount: '+$discount/100+' equals '+$sellcost" output="false" append="true" /> -->
                     </do_if>
                     
                     <set_value name="$spendablemoney" exact="player.money/100" />
                     <do_if value="this.ship.commander">
-                      <do_if value="(this.ship.commander.hasownaccount) and (this.ship.commander.defaultorder.id != 'TaterTrade')"> <!-- For proper compatability with commanders that arnt stations. -->
-                        <!--  <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'I have a commander!'" output="false" append="true" /> -->
+                        <do_if value="(this.ship.commander.hasownaccount) and (this.ship.commander.defaultorder == null or this.ship.commander.defaultorder.id != 'TaterTrade') and (this.ship.commander.money gt 0)"> <!-- For proper compatability with commanders that arnt stations. -->
+                        <!--  <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'I have a commander!'" output="false" append="true" /> -->
                         <set_value name="$spendablemoney" exact="this.ship.commander.money/100" />
                       </do_if>
                     </do_if>
@@ -1145,7 +1180,7 @@
 
                     <set_value name="$CheckGrofit" exact="false"/>
                     <do_if value="not $bypass and (($selloffer.seller.owner == this.ship.owner) or ($buyoffer.buyer.owner == this.ship.owner))"> <!-- We're dealing with one of our owners stations, take special care here. -->
-                      <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Our owner ones one of these stations, additional checks are inplace.'" output="false" append="true" /> -->
+                      <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Our owner ones one of these stations, additional checks are inplace.'" output="false" append="true" /> -->
                       <!-- Try to allow trade between owned stations regardless of restriction. -->
                       <do_if value="($selloffer.restriction.faction == $buyoffer.buyer.owner) or ($buyoffer.restriction.faction == $selloffer.seller.owner) or ($buyoffer.restriction.faction == $selloffer.restriction.faction)">
                         <set_value name="$CheckGrofit" exact="true"/>
@@ -1163,7 +1198,7 @@
                     <do_if value="$distancecheck">
                       <set_value name="$distance" exact="this.ship.gatedistance.{$selloffer.seller}.{$blacklistgroup}.{this.assignedcontrolled}"/>
                       <do_if value="$distance gt 0"> <!-- Only worry about distance when it involves going through gates. -->
-                        <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Ratio: '+$Ratio+' Rating: '+$Rating+' DistanceScale: '+(1-($distance*0.02)f)+' Result: '+($Rating)f*(1-($distance*0.02)f)" output="false" append="true" />  -->
+                        <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Ratio: '+$Ratio+' Rating: '+$Rating+' DistanceScale: '+(1-($distance*0.02)f)+' Result: '+($Rating)f*(1-($distance*0.02)f)" output="false" append="true" />  -->
                         <set_value name="$Rating" exact="($Rating)f*(1-($distance*($distancecheckpercent / 100))f)"/>
                       </do_if>
                       <set_value name="$distance" exact="$selloffer.seller.gatedistance.{$buyoffer.buyer}.{$blacklistgroup}.{this.assignedcontrolled}+this.ship.gatedistance.{$selloffer.seller}.{$blacklistgroup}.{this.assignedcontrolled}"/>
@@ -1172,7 +1207,7 @@
                       </do_if>
                     </do_if>
                     
-                    <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'   Scanning sell offer for ('+$buyoffer.ware+') at ('+$selloffer.seller.knownname+') Faction: ('+$selloffer.seller.owner+') Restriction: ('+$selloffer.restriction.faction+') Buying at '+$buycost+' Selling at '+$sellcost+' Average: '+$buyoffer.ware.averageprice/100+' Amount: '+$Amount+' Grofit: '+ $Amount*($buycost-$sellcost)+' Ratio: '+$Ratio+' Rating: '+$Rating+' RawSellOffer Price: '+$selloffer.unitprice/100+' Relation: '+$selloffer.seller.relationto.{this.ship.owner}+' Gate Distance: '+$selloffer.seller.gatedistance.{$buyoffer.buyer}.{$blacklistgroup}.{this.assignedcontrolled}+' Distance Raw: '+$selloffer.seller.distanceto.{$buyoffer.buyer}+' Distance Scale: '+$distancescale" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+                    <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'   Scanning sell offer for ('+$buyoffer.ware+') at ('+$selloffer.seller.knownname+') Faction: ('+$selloffer.seller.owner+') Restriction: ('+$selloffer.restriction.faction+') Buying at '+$buycost+' Selling at '+$sellcost+' Average: '+$buyoffer.ware.averageprice/100+' Amount: '+$Amount+' Grofit: '+ $Amount*($buycost-$sellcost)+' Ratio: '+$Ratio+' Rating: '+$Rating+' RawSellOffer Price: '+$selloffer.unitprice/100+' Relation: '+$selloffer.seller.relationto.{this.ship.owner}+' Gate Distance: '+$selloffer.seller.gatedistance.{$buyoffer.buyer}.{$blacklistgroup}.{this.assignedcontrolled}+' Distance Raw: '+$selloffer.seller.distanceto.{$buyoffer.buyer}+' Distance Scale: '+$distancescale" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 
                     <do_if value="$bestrating lt $Rating">
                       <set_value name="$bestrating" exact="$Rating"/>
@@ -1194,13 +1229,17 @@
                         <set_value name="$itemcostsell" exact="$sellcost" />
                         <set_value name="$itemcostbuy" exact="$buycost" />
                       </do_if>
+                      <set_value name="$selloffersChecked" exact="$selloffersChecked + 1" />
+                      <do_if value="$selloffersChecked gt ($maxbuy+$maxsell+10)">
+                        <break />
+                      </do_if>
                     </do_if>
-                  </do_if>
+                  </do_if> 
                   <set_value name="$scantick" exact="$scantick+1" />
                   <do_if value="$scantick gt $scantickrate">
                     <set_value name="$scantick" exact="0" />
                     <wait exact="1ms" />
-                  </do_if>
+                  </do_if>              
                 </do_all>
               </do_if>
               <do_else><!-- Seems we were told to use the fast trade option. -->
@@ -1217,7 +1256,7 @@
                     <set_value name="$Amount" exact="[this.ship.cargo.{$buyoffer.ware}.free,$buyoffer.amount,$selloffer.amount].min"/>
                   </do_else>                
 
-                  <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'   Scanning sell offer for ('+$buyoffer.ware+') at ('+$bestsell.seller.knownname+') Faction: ('+$bestsell.seller.owner+') Restriction: ('+$bestsell.restriction.faction+') Buying at '+$buycost+' Selling at '+$sellcost+' Average: '+$buyoffer.ware.averageprice/100+' Amount: '+$Amount+' Grofit: '+ $Amount*($buycost-$sellcost)" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+                  <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'   Scanning sell offer for ('+$buyoffer.ware+') at ('+$bestsell.seller.knownname+') Faction: ('+$bestsell.seller.owner+') Restriction: ('+$bestsell.restriction.faction+') Buying at '+$buycost+' Selling at '+$sellcost+' Average: '+$buyoffer.ware.averageprice/100+' Amount: '+$Amount+' Grofit: '+ $Amount*($buycost-$sellcost)" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 
                   <do_if value="$Grofit lt $Amount*($buycost-$sellcost)">
                     <set_value name="$Grofit" exact="$Amount*($buycost-$sellcost)" />
@@ -1227,8 +1266,8 @@
                     <set_value name="$GrofitFound" exact="true" />
                     <set_value name="$itemcostsell" exact="$sellcost" />
                     <set_value name="$itemcostbuy" exact="$buycost" />
-                  </do_if>
-                 
+                  </do_if>                 
+
                   <set_value name="$scantick" exact="$scantick+1" />
                   <do_if value="$scantick gt $scantickrate">
                     <set_value name="$scantick" exact="0" />
@@ -1242,6 +1281,10 @@
                   </do_if>
                 </do_else>
               </do_else>
+              <set_value name="$buyoffersChecked" exact="$buyoffersChecked + 1" />
+              <do_if value="$buyoffersChecked gt ($maxbuy+$maxsell+10)">
+                <break />
+              </do_if>
             </do_if>
           </do_all>
         </do_if>
@@ -1254,15 +1297,15 @@
       <do_if value="$GrofitFound or $StationTrade">
         <set_value name="$spendablemoney" exact="player.money/100" />
         <do_if value="this.ship.commander">
-          <do_if value="(this.ship.commander.hasownaccount) and (this.ship.commander.defaultorder.id != 'TaterTrade')"> <!-- For proper compatability with commanders that arnt stations. -->
-            <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'I have a commander!'" output="false" append="true" /> -->
+           <do_if value="(this.ship.commander.hasownaccount) and (this.ship.commander.defaultorder == null or this.ship.commander.defaultorder.id != 'TaterTrade') and (this.ship.commander.money gt 0)"> <!-- For proper compatability with commanders that arnt stations. -->
+            <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'I have a commander!'" output="false" append="true" /> -->
             <set_value name="$spendablemoney" exact="this.ship.commander.money/100" />
           </do_if>
         </do_if>
-        <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Checking if we can afford this deal! Money: '+$spendablemoney+' TotalCost: '+($itemcostsell*$Gromount)+' PerCost: '+$itemcostsell" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+        <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Checking if we can afford this deal! Money: '+$spendablemoney+' TotalCost: '+($itemcostsell*$Gromount)+' PerCost: '+$itemcostsell" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
         <do_if value="$spendablemoney gt ($itemcostsell*$Gromount)">
           <do_if value="$GrofferSell.available and $GrofferBuy.available">
-            <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Buying '+$Gromount+' '+$GrofferSell.ware+' for '+$itemcostsell+' at '+$GrofferSell.seller.knownname+' then '+'Selling '+$Gromount+' '+$GrofferBuy.ware+' for '+$itemcostbuy+' at '+$GrofferBuy.buyer.knownname" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+            <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Buying '+$Gromount+' '+$GrofferSell.ware+' for '+$itemcostsell+' at '+$GrofferSell.seller.knownname+' then '+'Selling '+$Gromount+' '+$GrofferBuy.ware+' for '+$itemcostbuy+' at '+$GrofferBuy.buyer.knownname" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
             <do_if value="$GrofitFound">
               <do_if value="($GrofferBuy.buyer.owner == this.ship.owner) or ($GrofferSell.seller.owner == this.ship.owner)">
                 <do_if value="($GrofferBuy.buyer.owner == this.ship.owner) and not ($GrofferSell.seller.owner == this.ship.owner)">
@@ -1317,11 +1360,11 @@
             <create_trade_order name="$GrofferBuy" object="this.object" tradeoffer="$GrofferBuy" amount="$Gromount" immediate="false" />
           </do_if>
           <do_else>
-            <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Looks like the trade were looking at is no longer available.'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>            
+            <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Looks like the trade were looking at is no longer available.'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>            
           </do_else>
         </do_if>
         <do_else>
-          <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'We cant afford this deal anymore'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>            
+          <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'We cant afford this deal anymore'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>            
         </do_else>
       </do_if>
 
@@ -1350,13 +1393,13 @@
       </do_if>
 
       <label name="orderloop" /> <!-- Lets try handling our orders ourselfs -->
-      <!-- <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'OrderLoop Is go'" output="false" append="true" /> -->
+      <!-- <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'OrderLoop Is go'" output="false" append="true" /> -->
 
       <do_if value="not (this.ship.order == this.ship.defaultorder)">
-        <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Order: '+this.ship.order.id+' State: '+this.ship.order.state" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+        <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Order: '+this.ship.order.id+' State: '+this.ship.order.state" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 
         <do_if value="this.ship.order.state == orderstate.ready">
-          <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Commencing Order: '+this.ship.order.id" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+          <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Commencing Order: '+this.ship.order.id" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
           <run_order_script order="this.ship.order"/>
          <!--  <resume label="orderloop" /> -->
         </do_if>
@@ -1369,12 +1412,12 @@
         <!-- <resume label="orderloop" /> -->
       </do_if>
       <!-- For some reason, we never get to this point. I think when it reachs the docking sequence the game aborts executing this script. -->
-      <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Orders Should of finished by now.'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+      <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Orders Should of finished by now.'" output="false" append="true" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
 
       <!-- Add a delay after the order "ends" -->
 	  <!-- Longer wait DA-->
       <wait min="1s" max="5s"/>
-      <debug_to_file name="this.ship.knownname" directory="'TaterTrader'" text="'Resetting Log File Version: 4'" output="false" append="false" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
+      <debug_to_file name="this.ship.idcode" directory="'TaterTrader'" text="'Resetting Log File Version: 4'" output="false" append="false" chance="if @$TaterDebugChance then ($TaterDebugChance * 100) else (0)"/>
       <resume label="start" />
       <!-- Might need a way to restart the script after a amount of time to prevent the build up of issues. -->
     </actions>
