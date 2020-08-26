@@ -448,6 +448,8 @@
 			<append_list_elements name="$warebasket" other="$smalllegalwareslist" />
 		</do_if>
 	</do_else>
+	    
+      <label name="start" />
 	
 	<sort_list list="$warebasket" sortbyvalue="loop.element.volume" sortdescending="true"/>
 	<create_list name="$usedwarebasket" />
@@ -455,7 +457,6 @@
 	<shuffle_list list="$usedwarebasket"/>
 	
 
-      <label name="start" />
       <set_command_action commandaction="commandaction.searchingtrades" />
       <!-- Figure out what we are ment to do, free trading or station supply. -->
       <!-- For now assuming sector based trade. -->
